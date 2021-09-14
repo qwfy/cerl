@@ -17,7 +17,6 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.distributions import Normal
 
 
 class Actor(nn.Module):
@@ -31,17 +30,18 @@ class Actor(nn.Module):
         super(Actor, self).__init__()
 
         self.wwid = torch.Tensor([wwid])
-        l1 = 400; l2 = 300
+        l1 = 400;
+        l2 = 300
 
         # Construct Hidden Layer 1
         self.f1 = nn.Linear(state_dim, l1)
         self.ln1 = nn.LayerNorm(l1)
 
-        #Hidden Layer 2
+        # Hidden Layer 2
         self.f2 = nn.Linear(l1, l2)
         self.ln2 = nn.LayerNorm(l2)
 
-        #Out
+        # Out
         self.w_out = nn.Linear(l2, action_dim)
 
     def forward(self, input):
@@ -55,20 +55,19 @@ class Actor(nn.Module):
 
 
         """
-        #Hidden Layer 1
+        # Hidden Layer 1
         out = F.elu(self.f1(input))
         out = self.ln1(out)
 
-        #Hidden Layer 2
+        # Hidden Layer 2
         out = F.elu(self.f2(out))
         out = self.ln2(out)
 
-        #Out
+        # Out
         return torch.sigmoid(self.w_out(out))
 
 
 class Critic(nn.Module):
-
     """Critic model
 
         Parameters:
@@ -78,31 +77,31 @@ class Critic(nn.Module):
 
     def __init__(self, state_dim, action_dim):
         super(Critic, self).__init__()
-        l1 = 400; l2 = 300
+        l1 = 400;
+        l2 = 300
 
         ######################## Q1 Head ##################
         # Construct Hidden Layer 1 with state
         self.q1f1 = nn.Linear(state_dim + action_dim, l1)
         self.q1ln1 = nn.LayerNorm(l1)
 
-        #Hidden Layer 2
+        # Hidden Layer 2
         self.q1f2 = nn.Linear(l1, l2)
         self.q1ln2 = nn.LayerNorm(l2)
 
-        #Out
+        # Out
         self.q1out = nn.Linear(l2, 1)
-
 
         ######################## Q2 Head ##################
         # Construct Hidden Layer 1 with state
         self.q2f1 = nn.Linear(state_dim + action_dim, l1)
         self.q2ln1 = nn.LayerNorm(l1)
 
-        #Hidden Layer 2
+        # Hidden Layer 2
         self.q2f2 = nn.Linear(l1, l2)
         self.q2ln2 = nn.LayerNorm(l2)
 
-        #Out
+        # Out
         self.q2out = nn.Linear(l2, 1)
 
         ######################## Value Head ##################  [NOT USED IN CERL]
@@ -116,10 +115,6 @@ class Critic(nn.Module):
 
         # Out
         self.vout = nn.Linear(l2, 1)
-
-
-
-
 
     def forward(self, obs, action):
         """Method to forward propagate through the critic's graph
@@ -137,7 +132,7 @@ class Critic(nn.Module):
 
          """
 
-        #Concatenate observation+action as critic state
+        # Concatenate observation+action as critic state
         state = torch.cat([obs, action], 1)
 
         ###### Q1 HEAD ####
@@ -161,9 +156,7 @@ class Critic(nn.Module):
         v = self.vln2(v)
         v = self.vout(v)
 
-
         return q1, q2, v
-
 
 
 # Initialize weights
@@ -171,4 +164,3 @@ def weights_init(m):
     classname = m.__class__.__name__
     if classname.find('Linear') != -1:
         torch.nn.init.xavier_uniform_(m.weight)
-

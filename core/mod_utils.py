@@ -14,12 +14,17 @@
 # limitations under the License.
 # ******************************************************************************
 
+import argparse
+import copy
+import numpy as np
+import os
+import pickle
+import torch
 from torch import nn
 from torch.autograd import Variable
-import random, pickle, copy, argparse
-import numpy as np, torch, os
 
-class Tracker(): #Tracker
+
+class Tracker():  # Tracker
     """Tracker class to log progress and save metrics periodically
 
     Parameters:
@@ -32,14 +37,15 @@ class Tracker(): #Tracker
     """
 
     def __init__(self, save_folder, vars_string, project_string):
-        self.vars_string = vars_string; self.project_string = project_string
+        self.vars_string = vars_string;
+        self.project_string = project_string
         self.foldername = save_folder
-        self.all_tracker = [[[],0.0,[]] for _ in vars_string] #[Id of var tracked][fitnesses, avg_fitness, csv_fitnesses]
+        self.all_tracker = [[[], 0.0, []] for _ in
+                            vars_string]  # [Id of var tracked][fitnesses, avg_fitness, csv_fitnesses]
         self.counter = 0
         self.conv_size = 1
         if not os.path.exists(self.foldername):
             os.makedirs(self.foldername)
-
 
     def update(self, updates, generation):
         """Add a metric observed
@@ -57,14 +63,14 @@ class Tracker(): #Tracker
             if update == None: continue
             var[0].append(update)
 
-        #Constrain size of convolution
+        # Constrain size of convolution
         for var in self.all_tracker:
             if len(var[0]) > self.conv_size: var[0].pop(0)
 
-        #Update new average
+        # Update new average
         for var in self.all_tracker:
             if len(var[0]) == 0: continue
-            var[1] = sum(var[0])/float(len(var[0]))
+            var[1] = sum(var[0]) / float(len(var[0]))
 
         if self.counter % 1 == 0:  # Save to csv file
             for i, var in enumerate(self.all_tracker):
@@ -97,11 +103,11 @@ def hard_update(target, source):
     for target_param, param in zip(target.parameters(), source.parameters()):
         target_param.data.copy_(param.data)
 
-    #Signature transfer if applicable
+    # Signature transfer if applicable
     try:
         target.wwid[0] = source.wwid[0]
     except:
-	    None
+        None
 
 
 def soft_update(target, source, tau):
@@ -132,6 +138,7 @@ def to_numpy(var):
     """
     return var.data.numpy()
 
+
 def to_tensor(ndarray, volatile=False, requires_grad=False):
     """numpy --> Variable
 
@@ -147,6 +154,7 @@ def to_tensor(ndarray, volatile=False, requires_grad=False):
     if isinstance(ndarray, list): ndarray = np.array(ndarray)
     return Variable(torch.from_numpy(ndarray).float(), volatile=volatile, requires_grad=requires_grad)
 
+
 def pickle_obj(filename, object):
     """Pickle object
 
@@ -161,6 +169,7 @@ def pickle_obj(filename, object):
     handle = open(filename, "wb")
     pickle.dump(object, handle)
 
+
 def unpickle_obj(filename):
     """Unpickle object from disk
 
@@ -172,6 +181,7 @@ def unpickle_obj(filename):
     """
     with open(filename, 'rb') as f:
         return pickle.load(f)
+
 
 def init_weights(m):
     """Initialize weights using kaiming uniform initialization in place
@@ -196,8 +206,11 @@ def list_mean(l):
     Returns:
         mean (float): mean
     """
-    if len(l) == 0: return None
-    else: return sum(l)/len(l)
+    if len(l) == 0:
+        return None
+    else:
+        return sum(l) / len(l)
+
 
 def pprint(l):
     """Pretty print
@@ -212,10 +225,10 @@ def pprint(l):
     if isinstance(l, list):
         if len(l) == 0: return None
     else:
-        if l == None: return None
-        else: return '%.2f'%l
-
-
+        if l == None:
+            return None
+        else:
+            return '%.2f' % l
 
 
 def flatten(d):
@@ -238,6 +251,7 @@ def flatten(d):
         res = [d]
     return res
 
+
 def reverse_flatten(d, l):
     """Recursive method to unflatten a list -->dict [Reverse of flatten] in place
 
@@ -252,7 +266,7 @@ def reverse_flatten(d, l):
     if isinstance(d, dict):
         for key, _ in sorted(d.items()):
 
-            #FLoat is immutable so
+            # FLoat is immutable so
             if isinstance(d[key], float):
                 d[key] = l[0]
                 l[:] = l[1:]
@@ -286,10 +300,3 @@ def load_all_models_dir(dir, model_template):
         except:
             print(fname, 'failed to load')
     return models
-
-
-
-
-
-
-

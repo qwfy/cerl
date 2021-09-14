@@ -1,6 +1,6 @@
+import gym
 import numpy as np
 import torch
-import gym
 
 from core.models import Actor
 
